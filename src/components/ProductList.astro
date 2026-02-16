@@ -1,0 +1,6 @@
+---
+import ProductListClient from './ProductListClient.jsx';
+const { products } = Astro.props;
+---
+
+<ProductListClient client:load products={products} />
