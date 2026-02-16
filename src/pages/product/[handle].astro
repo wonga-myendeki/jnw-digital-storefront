@@ -1,0 +1,62 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+
+const { handle } = Astro.params;
+const SHOP = import.meta.env.PUBLIC_SHOPIFY_STORE_DOMAIN;
+const TOKEN = import.meta.env.PUBLIC_SHOPIFY_STOREFRONT_TOKEN;
+const API_VER = import.meta.env.SHOPIFY_API_VERSION || '2025-01';
+
+const GET_PRODUCT_BY_HANDLE = `
+query ProductByHandle($handle: String!) {
+  productByHandle(handle: $handle) {
+    id
+    handle
+    title
+    description
+    images(first: 10) { edges { node { url altText } } }
+    variants(first: 10) { edges { node { id title availableForSale priceV2 { amount currencyCode } sku } } }
+  }
+}`;
+
+let product = null;
+if (SHOP && TOKEN && handle) {
+  const response = await fetch(`https://${SHOP}/api/${API_VER}/graphql.json`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Storefront-Access-Token': TOKEN,
+    },
+    body: JSON.stringify({ query: GET_PRODUCT_BY_HANDLE, variables: { handle } }),
+  });
+  const json = await response.json();
+  product = json.data?.productByHandle ?? null;
+}
+---
+
+<MainLayout title={product ? `${product.title} — JNW` : 'Product — JNW'}>
+  <main class="mx-auto max-w-4xl px-5 py-10 md:px-10">
+    <a href="/" class="font-sans text-xs uppercase tracking-[0.25em] text-amber-200/80">← Back to collection</a>
+    {
+      product ? (
+        <article class="mt-6 grid gap-7 md:grid-cols-2">
+          <img
+            src={product.images?.edges?.[0]?.node?.url}
+            alt={product.images?.edges?.[0]?.node?.altText || product.title}
+            class="gold-outline aspect-[4/5] w-full rounded-md object-cover"
+          />
+          <div>
+            <h1 class="text-4xl text-amber-50">{product.title}</h1>
+            <p class="mt-4 font-sans text-sm leading-relaxed text-amber-100/80">{product.description}</p>
+            <ul class="mt-5 space-y-2 font-sans text-sm text-amber-100/85">
+              {product.variants.edges.map(({ node }) => (
+                <li class="gold-outline rounded p-3">{node.title} — R{node.priceV2.amount}</li>
+              ))}
+            </ul>
+          </div>
+        </article>
+      ) : (
+        <p class="mt-8 font-sans text-sm text-amber-100/80">Product not found or Shopify credentials are missing.</p>
+      )
+    }
+  </main>
+</MainLayout>
