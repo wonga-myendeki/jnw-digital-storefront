@@ -29,4 +29,18 @@ A black-and-gold Shopify storefront MVP inspired by luxury mobile wine ecommerce
 - `SHOPIFY_STOREFRONT_TOKEN_SERVER`
 - `SHOPIFY_API_VERSION`
 
-`PUBLIC_*` variables are used for product reads. Server token is used by `src/pages/api/checkout.js`.
+`PUBLIC_*` variables are used for product reads. Server token is used for checkout creation in `src/pages/api/checkout.js`.
+
+## Shopify integration architecture
+- `src/lib/shopify.js`: shared Storefront API reads for product listing and product-detail pages.
+- `src/lib/shopify.server.js`: server-only Shopify Cart API checkout URL creation and line-item normalization.
+- `src/pages/api/checkout.js`: API route adapter for cart checkout requests.
+
+## Integration readiness notes
+A deeper analysis and production-readiness checklist is available in:
+- `docs/shopify-integration-readiness.md`
+
+
+## Security note
+- Never commit real Shopify tokens to the repository.
+- Put the provided tokens only in local `.env` or deployment secret storage.
